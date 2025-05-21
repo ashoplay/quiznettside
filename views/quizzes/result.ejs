@@ -1,0 +1,99 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+  <h1 class="mb-4">Quiz Resultat</h1>
+  
+  <div class="card mb-4">
+    <div class="card-body">
+      <h2><%= quiz.tittel %></h2>
+      <p><%= quiz.beskrivelse %></p>
+      
+      <div class="result-summary text-center my-4">
+        <h3>Din poengsum:</h3>
+        <div class="display-4 mb-3"><%= totalPoeng %> av <%= maksPoeng %> poeng</div>
+        <div class="progress" style="height: 30px;">
+          <div class="progress-bar <%= prosentRiktig >= 80 ? 'bg-success' : prosentRiktig >= 50 ? 'bg-warning' : 'bg-danger' %>" 
+               role="progressbar" 
+               style="width: <%= prosentRiktig %>%;" 
+               aria-valuenow="<%= prosentRiktig %>" 
+               aria-valuemin="0" 
+               aria-valuemax="100">
+            <%= prosentRiktig %>%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <h3 class="mb-3">Gjennomgang av svar</h3>
+  
+  <% quiz.spørsmål.forEach((spørsmål, spørsmålIndex) => { %>
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Spørsmål <%= spørsmålIndex + 1 %>: <%= spørsmål.tekst %></h5>
+      </div>
+      <div class="card-body">
+        <% let brukerSvar = svar[spørsmålIndex]; %>
+        <% let riktigSvar; %>
+        <% let harSvart = brukerSvar !== null && brukerSvar !== undefined; %>
+        
+        <% if (!harSvart) { %>
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Du svarte ikke på dette spørsmålet
+          </div>
+        <% } %>
+        
+        <% if (spørsmål.type === 'flervalg' || spørsmål.type === 'sant_usant') { %>
+          <% const riktigAlternativ = spørsmål.alternativer.find(alt => alt.erRiktig); %>
+          <% riktigSvar = riktigAlternativ ? riktigAlternativ.tekst : 'Ukjent'; %>
+          
+          <% if (harSvart) { %>
+            <% spørsmål.alternativer.forEach((alternativ) => { %>
+              <div class="mb-2">
+                <% if (alternativ._id.toString() === brukerSvar) { %>
+                  <% if (alternativ.erRiktig) { %>
+                    <div class="alert alert-success">
+                      <i class="fas fa-check-circle"></i> Du svarte: <%= alternativ.tekst %> (Riktig)
+                    </div>
+                  <% } else { %>
+                    <div class="alert alert-danger">
+                      <i class="fas fa-times-circle"></i> Du svarte: <%= alternativ.tekst %> (Feil)
+                    </div>
+                  <% } %>
+                <% } %>
+              </div>
+            <% }); %>
+          <% } %>
+          
+          <p class="mt-3"><strong>Riktig svar:</strong> <%= riktigSvar %></p>
+          
+        <% } else if (spørsmål.type === 'tekstsvar') { %>
+          <% const erRiktig = harSvart && brukerSvar.toLowerCase().trim() === spørsmål.riktigSvar.toLowerCase().trim(); %>
+          
+          <% if (harSvart) { %>
+            <div class="alert <%= erRiktig ? 'alert-success' : 'alert-danger' %>">
+              <i class="fas <%= erRiktig ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
+              Du svarte: <%= brukerSvar %> (<%= erRiktig ? 'Riktig' : 'Feil' %>)
+            </div>
+          <% } %>
+          
+          <p class="mt-3"><strong>Riktig svar:</strong> <%= spørsmål.riktigSvar %></p>
+        <% } %>
+        
+        <% if (spørsmål.poeng > 0) { %>
+          <p><small class="text-muted">Dette spørsmålet ga <%= spørsmål.poeng %> poeng</small></p>
+        <% } %>
+      </div>
+    </div>
+  <% }); %>
+  
+  <div class="text-center mb-4">
+    <a href="/quizzes" class="btn btn-primary">Se flere quizzer</a>
+    <% if (user) { %>
+      <a href="/quizzes/historikk" class="btn btn-secondary">Se din quiz-historikk</a>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

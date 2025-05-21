@@ -1,0 +1,182 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <h1>Edit Quiz</h1>
+  
+  <form action="/quizzer/<%= quiz._id %>?_method=PUT" method="POST">
+    <!-- Include CSRF token to prevent CSRF errors -->
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    
+    <div class="mb-3">
+      <label for="title" class="form-label">Quiz Title</label>
+      <input type="text" class="form-control" id="title" name="title" value="<%= quiz.title %>" required>
+    </div>
+    
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"><%= quiz.description %></textarea>
+    </div>
+    
+    <h3 class="mt-4">Questions</h3>
+    <div id="questions-container">
+      <% if (quiz.questions && Array.isArray(quiz.questions)) { %>
+        <% quiz.questions.forEach((question, qIndex) => { %>
+          <div class="card mb-3 question-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5>Question <%= qIndex + 1 %></h5>
+              <button type="button" class="btn btn-danger btn-sm remove-question">Remove</button>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Question Text</label>
+                <input type="text" class="form-control" name="questions[<%= qIndex %>][text]" value="<%= question.text %>" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Correct Option (0-based index)</label>
+                <input type="number" class="form-control" name="questions[<%= qIndex %>][correctOption]" value="<%= question.correctOption %>" min="0" required>
+              </div>
+              
+              <div class="options-container">
+                <label class="form-label">Options</label>
+                <% question.options.forEach((option, oIndex) => { %>
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control" name="questions[<%= qIndex %>][options][<%= oIndex %>]" value="<%= option %>" required>
+                    <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+                  </div>
+                <% }); %>
+                <button type="button" class="btn btn-outline-primary btn-sm add-option">+ Add Option</button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+    
+    <button type="button" id="add-question" class="btn btn-outline-success mb-4">+ Add Question</button>
+    
+    <div class="mb-3">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/quizzer/<%= quiz._id %>" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add question functionality
+    document.getElementById('add-question').addEventListener('click', function() {
+      const questionsContainer = document.getElementById('questions-container');
+      const questionCount = questionsContainer.querySelectorAll('.question-card').length;
+      
+      const newQuestion = document.createElement('div');
+      newQuestion.className = 'card mb-3 question-card';
+      newQuestion.innerHTML = `
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5>Question ${questionCount + 1}</h5>
+          <button type="button" class="btn btn-danger btn-sm remove-question">Remove</button>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Question Text</label>
+            <input type="text" class="form-control" name="questions[${questionCount}][text]" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Correct Option (0-based index)</label>
+            <input type="number" class="form-control" name="questions[${questionCount}][correctOption]" min="0" value="0" required>
+          </div>
+          
+          <div class="options-container">
+            <label class="form-label">Options</label>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" name="questions[${questionCount}][options][0]" required>
+              <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+            </div>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" name="questions[${questionCount}][options][1]" required>
+              <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm add-option">+ Add Option</button>
+          </div>
+        </div>
+      `;
+      
+      questionsContainer.appendChild(newQuestion);
+      setupEventListeners();
+    });
+    
+    function setupEventListeners() {
+      // Remove question functionality
+      document.querySelectorAll('.remove-question').forEach(button => {
+        button.addEventListener('click', function() {
+          this.closest('.question-card').remove();
+          updateQuestionNumbers();
+        });
+      });
+      
+      // Add option functionality
+      document.querySelectorAll('.add-option').forEach(button => {
+        button.addEventListener('click', function() {
+          const optionsContainer = this.closest('.options-container');
+          const questionIndex = optionsContainer.querySelector('input').name.match(/questions\[(\d+)\]/)[1];
+          const optionCount = optionsContainer.querySelectorAll('.input-group').length;
+          
+          const newOption = document.createElement('div');
+          newOption.className = 'input-group mb-2';
+          newOption.innerHTML = `
+            <input type="text" class="form-control" name="questions[${questionIndex}][options][${optionCount}]" required>
+            <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+          `;
+          
+          optionsContainer.insertBefore(newOption, this);
+          setupOptionRemoval(newOption.querySelector('.remove-option'));
+        });
+      });
+      
+      // Remove option functionality
+      document.querySelectorAll('.remove-option').forEach(button => {
+        setupOptionRemoval(button);
+      });
+    }
+    
+    function setupOptionRemoval(button) {
+      button.addEventListener('click', function() {
+        const inputGroup = this.closest('.input-group');
+        const optionsContainer = inputGroup.closest('.options-container');
+        
+        if (optionsContainer.querySelectorAll('.input-group').length > 2) {
+          inputGroup.remove();
+          updateOptionIndices(optionsContainer);
+        } else {
+          alert('Each question must have at least 2 options.');
+        }
+      });
+    }
+    
+    function updateQuestionNumbers() {
+      const questionCards = document.querySelectorAll('.question-card');
+      questionCards.forEach((card, index) => {
+        card.querySelector('h5').textContent = `Question ${index + 1}`;
+        
+        // Update question indices in input names
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+          input.name = input.name.replace(/questions\[\d+\]/, `questions[${index}]`);
+        });
+      });
+    }
+    
+    function updateOptionIndices(container) {
+      const options = container.querySelectorAll('.input-group');
+      options.forEach((option, index) => {
+        const input = option.querySelector('input');
+        input.name = input.name.replace(/\[options\]\[\d+\]/, `[options][${index}]`);
+      });
+    }
+    
+    setupEventListeners();
+  });
+</script>
+
+<%- include('../partials/footer') %>

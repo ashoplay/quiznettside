@@ -1,0 +1,275 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Statistikk for <%= quiz.tittel %></h1>
+        <a href="/quizzes/<%= quiz._id %>" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-1"></i> Tilbake til quiz
+        </a>
+    </div>
+    
+    <%- include('../partials/messages') %>
+    
+    <div class="row mb-4">
+        <!-- Performance summary card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i> Generell informasjon</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6 text-center border-right">
+                            <h5>Antall forsøk</h5>
+                            <h2 class="display-4"><%= attempts && attempts.length || 0 %></h2>
+                        </div>
+                        <div class="col-6 text-center">
+                            <h5>Gj.snitt score</h5>
+                            <% if (typeof gjennomsnittsProsentRiktig !== 'undefined') { %>
+                                <h2 class="display-4 <%= gjennomsnittsProsentRiktig >= 70 ? 'text-success' : gjennomsnittsProsentRiktig >= 40 ? 'text-warning' : 'text-danger' %>">
+                                    <%= gjennomsnittsProsentRiktig.toFixed(1) %>%
+                                </h2>
+                            <% } else { %>
+                                <h2 class="display-4">-</h2>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p><strong>Gjennomsnittlig poengsum:</strong> 
+                            <% if (typeof gjennomsnittsPoeng !== 'undefined' && typeof maksPoeng !== 'undefined') { %>
+                                <%= gjennomsnittsPoeng.toFixed(1) %> av <%= maksPoeng %> poeng
+                            <% } else { %>
+                                Ingen data
+                            <% } %>
+                        </p>
+                        <p><strong>Antall med full score:</strong> <%= typeof fullScore !== 'undefined' ? fullScore : 0 %></p>
+                    </div>
+                    
+                    <% if (typeof gjennomsnittsProsentRiktig !== 'undefined') { %>
+                        <div class="mt-4">
+                            <h6>Vanskelighetsgrad basert på resultater:</h6>
+                            <% if (gjennomsnittsProsentRiktig >= 80) { %>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-smile mr-2"></i> Enkel - De fleste brukere mestrer denne quizen godt.
+                                </div>
+                            <% } else if (gjennomsnittsProsentRiktig >= 60) { %>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-thumbs-up mr-2"></i> Moderat - Brukere har god forståelse, men noen utfordringer.
+                                </div>
+                            <% } else if (gjennomsnittsProsentRiktig >= 40) { %>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-meh mr-2"></i> Utfordrende - Mange brukere sliter med denne quizen.
+                                </div>
+                            <% } else { %>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-frown mr-2"></i> Vanskelig - De fleste brukere finner denne quizen meget krevende.
+                                </div>
+                            <% } %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Score distribution card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie mr-2"></i> Poengfordeling</h5>
+                </div>
+                <div class="card-body">
+                    <% if (attempts && attempts.length > 0) { %>
+                        <div class="row text-center mb-3">
+                            <div class="col-12">
+                                <canvas id="scoreDistributionChart" height="180"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="progress mb-2" style="height: 25px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                    style="width: <%= (fullScore / attempts.length * 100) || 0 %>%;" 
+                                    aria-valuenow="<%= (fullScore / attempts.length * 100) || 0 %>" 
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    Full score (<%= fullScore || 0 %>)
+                                </div>
+                            </div>
+                            <div class="progress mb-2" style="height: 25px;">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                    style="width: <%= (highScore / attempts.length * 100) || 0 %>%;" 
+                                    aria-valuenow="<%= (highScore / attempts.length * 100) || 0 %>" 
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    Høy score (70-99%) (<%= highScore || 0 %>)
+                                </div>
+                            </div>
+                            <div class="progress mb-2" style="height: 25px;">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                    style="width: <%= (mediumScore / attempts.length * 100) || 0 %>%;" 
+                                    aria-valuenow="<%= (mediumScore / attempts.length * 100) || 0 %>" 
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    Medium score (40-69%) (<%= mediumScore || 0 %>)
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                    style="width: <%= (lowScore / attempts.length * 100) || 0 %>%;" 
+                                    aria-valuenow="<%= (lowScore / attempts.length * 100) || 0 %>" 
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    Lav score (0-39%) (<%= lowScore || 0 %>)
+                                </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                            <p class="lead">Ingen forsøk å vise ennå</p>
+                            <p>Statistikk vil vises når brukere har tatt quizen.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Difficult questions card -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-circle mr-2"></i> Vanskelige spørsmål</h5>
+                </div>
+                <div class="card-body">
+                    <% if (typeof vanskeligeSpørsmål !== 'undefined' && vanskeligeSpørsmål.length > 0) { %>
+                        <p class="lead mb-4">Spørsmål brukerne har størst utfordringer med:</p>
+                        <div class="row">
+                            <% vanskeligeSpørsmål.forEach((s, index) => { %>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 <%= s.riktigSvarProsent < 30 ? 'border-danger' : 'border-warning' %>">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">Spørsmål <%= index + 1 %></h6>
+                                            <span class="badge <%= s.riktigSvarProsent < 30 ? 'badge-danger' : 'badge-warning' %>">
+                                                <%= s.riktigSvarProsent ? s.riktigSvarProsent.toFixed(1) : 0 %>% riktig svar-rate
+                                            </span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><%= s.tekst %></p>
+                                        </div>
+                                        <div class="card-footer bg-light">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle mr-1"></i> 
+                                                Vurder å omformulere spørsmålet eller gjøre det tydeligere hvis svar-raten er lav.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                            <p class="lead">Ingen data om vanskelige spørsmål</p>
+                            <p>Dette vil vises etter at flere brukere har tatt quizen.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Nylige forsøk</h5>
+        </div>
+        <div class="card-body">
+            <% if (typeof nyligeForsøk !== 'undefined' && nyligeForsøk.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-user mr-1"></i> Bruker</th>
+                                <th><i class="fas fa-calendar-alt mr-1"></i> Dato</th>
+                                <th><i class="fas fa-award mr-1"></i> Poeng</th>
+                                <th><i class="fas fa-percentage mr-1"></i> Prosent</th>
+                                <th><i class="fas fa-check-circle mr-1"></i> Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% nyligeForsøk.forEach(attempt => { %>
+                                <tr>
+                                    <td><%= attempt.bruker && attempt.bruker.brukernavn || 'Ukjent bruker' %></td>
+                                    <td><%= attempt.dato ? new Date(attempt.dato).toLocaleString('no-NO') : 'Ukjent dato' %></td>
+                                    <td><%= attempt.poengOppnådd || 0 %> / <%= attempt.maksPoeng || 0 %></td>
+                                    <td>
+                                        <span class="badge <%= attempt.prosentRiktig >= 80 ? 'badge-success' : attempt.prosentRiktig >= 50 ? 'badge-warning' : 'badge-danger' %>">
+                                            <%= attempt.prosentRiktig || 0 %>%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (attempt.prosentRiktig >= 80) { %>
+                                            <span class="text-success"><i class="fas fa-check-circle mr-1"></i> Bestått med glans</span>
+                                        <% } else if (attempt.prosentRiktig >= 50) { %>
+                                            <span class="text-warning"><i class="fas fa-check mr-1"></i> Bestått</span>
+                                        <% } else { %>
+                                            <span class="text-danger"><i class="fas fa-times-circle mr-1"></i> Ikke bestått</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <p class="lead">Ingen nylige forsøk å vise</p>
+                    <p>Nye forsøk vil vises her etter hvert som brukere tar quizen.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        <% if (attempts && attempts.length > 0) { %>
+            // Score distribution chart
+            const scoreCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+            
+            new Chart(scoreCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Full score (100%)', 'Høy (70-99%)', 'Medium (40-69%)', 'Lav (0-39%)'],
+                    datasets: [{
+                        data: [
+                            <%= fullScore || 0 %>, 
+                            <%= highScore || 0 %>, 
+                            <%= mediumScore || 0 %>, 
+                            <%= lowScore || 0 %>
+                        ],
+                        backgroundColor: [
+                            '#28a745', // success
+                            '#17a2b8', // info
+                            '#ffc107', // warning
+                            '#dc3545'  // danger
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        <% } %>
+    });
+</script>
+
+<%- include('../partials/footer') %>

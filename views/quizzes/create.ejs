@@ -1,0 +1,97 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Lag en Ny Quiz</h1>
+    
+    <%- include('../partials/messages') %>
+    
+    <form id="quizForm" action="/quizzes/create" method="POST">
+        <!-- Add CSRF Token -->
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Quiz Informasjon</h4>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="tittel">Tittel</label>
+                    <input type="text" id="tittel" name="tittel" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="beskrivelse">Beskrivelse</label>
+                    <textarea id="beskrivelse" name="beskrivelse" class="form-control" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="kategori">Kategori</label>
+                    <select id="kategori" name="kategori" class="form-control" required>
+                        <option value="">Velg kategori</option>
+                        <option value="Utvikling og standardisering">Utvikling og standardisering</option>
+                        <option value="Planlegging og dokumentasjon">Planlegging og dokumentasjon</option>
+                        <option value="Teknologiforståelse">Teknologiforståelse</option>
+                        <option value="Annet">Annet</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="spørsmålContainer">
+            <!-- Spørsmål vil bli lagt til her dynamisk -->
+        </div>
+        
+        <div class="text-center mb-4">
+            <button type="button" id="leggTilSpørsmål" class="btn btn-success">
+                <i class="fas fa-plus"></i> Legg Til Spørsmål
+            </button>
+        </div>
+        
+        <input type="hidden" id="spørsmålData" name="spørsmål" value="">
+        
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Lagre Quiz</button>
+        </div>
+    </form>
+</div>
+
+<!-- Spørsmåls-mal (skjult) -->
+<template id="spørsmålTemplate">
+    <div class="card mb-4 spørsmål">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5>Spørsmål <span class="spørsmålNummer">1</span></h5>
+            <button type="button" class="btn btn-danger btn-sm fjernSpørsmål">
+                <i class="fas fa-trash"></i> Fjern
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Spørsmålstekst</label>
+                <input type="text" class="form-control spørsmålTekst" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Spørsmålstype</label>
+                <select class="form-control spørsmålType">
+                    <option value="flervalg">Flervalg</option>
+                    <option value="sant_usant">Sant/Usant</option>
+                    <option value="tekstsvar">Tekstsvar</option>
+                </select>
+            </div>
+            
+            <div class="form-group poengGruppe">
+                <label>Poeng</label>
+                <input type="number" class="form-control poeng" min="1" value="1">
+            </div>
+            
+            <div class="alternativerContainer">
+                <!-- Her kommer alternativer basert på spørsmålstype -->
+            </div>
+        </div>
+    </div>
+</template>
+
+<script src="/js/quiz-creator.js"></script>
+
+<%- include('../partials/footer') %>

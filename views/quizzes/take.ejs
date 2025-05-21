@@ -1,0 +1,299 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+  <h1 class="mb-4"><%= quiz.tittel %></h1>
+  
+  <div class="card mb-4">
+    <div class="card-body">
+      <p class="lead"><%= quiz.beskrivelse %></p>
+      <div class="d-flex justify-content-between">
+        <p><small class="text-muted">Kategori: <%= quiz.kategori %></small></p>
+        <p><small class="text-muted">Opprettet av: <%= quiz.opprettetAv ? quiz.opprettetAv.brukernavn : 'Ukjent' %></small></p>
+      </div>
+    </div>
+  </div>
+
+  <% if (quiz.spørsmål && quiz.spørsmål.length > 0) { %>
+    <div class="mb-4">
+      <div class="progress">
+        <div class="progress-bar bg-success" id="quiz-progress-bar" role="progressbar" style="width: 0%;" 
+             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+      </div>
+      <div class="text-center mt-2">
+        <small class="text-muted" id="completion-text">0 av <%= quiz.spørsmål.length %> spørsmål besvart</small>
+      </div>
+    </div>
+
+    <form action="/quizzes/<%= quiz._id %>/svar" method="POST" id="quizForm">
+      <!-- CSRF Token -->
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      
+      <% quiz.spørsmål.forEach((spørsmål, spørsmålIndex) => { %>
+        <div class="card mb-4 question-card" id="question-card-<%= spørsmålIndex %>">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Spørsmål <%= spørsmålIndex + 1 %>: <%= spørsmål.tekst %></h5>
+            <span class="answer-status badge bg-secondary">Ikke besvart</span>
+          </div>
+          <div class="card-body">
+            <div class="question-feedback text-danger mb-2 d-none">Du må svare på dette spørsmålet.</div>
+            <% if (spørsmål.type === 'flervalg') { %>
+              <% spørsmål.alternativer.forEach((alternativ, altIndex) => { %>
+                <div class="form-check mb-2">
+                  <input 
+                    class="form-check-input question-input" 
+                    type="radio" 
+                    name="svar[<%= spørsmålIndex %>]" 
+                    id="svar-<%= spørsmålIndex %>-<%= altIndex %>" 
+                    value="<%= alternativ._id %>"
+                    data-question-index="<%= spørsmålIndex %>"
+                    required>
+                  <label class="form-check-label" for="svar-<%= spørsmålIndex %>-<%= altIndex %>">
+                    <%= alternativ.tekst %>
+                  </label>
+                </div>
+              <% }); %>
+            <% } else if (spørsmål.type === 'sant_usant') { %>
+              <div class="form-check mb-2">
+                <input class="form-check-input question-input" type="radio" name="svar[<%= spørsmålIndex %>]" id="svar-<%= spørsmålIndex %>-sant" value="<%= spørsmål.alternativer[0]._id %>" data-question-index="<%= spørsmålIndex %>">
+                <label class="form-check-label" for="svar-<%= spørsmålIndex %>-sant">Sant</label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input question-input" type="radio" name="svar[<%= spørsmålIndex %>]" id="svar-<%= spørsmålIndex %>-usant" value="<%= spørsmål.alternativer[1]._id %>" data-question-index="<%= spørsmålIndex %>">
+                <label class="form-check-label" for="svar-<%= spørsmålIndex %>-usant">Usant</label>
+              </div>
+            <% } else if (spørsmål.type === 'tekstsvar') { %>
+              <div class="form-group">
+                <input type="text" class="form-control question-input" name="svar[<%= spørsmålIndex %>]" placeholder="Skriv inn ditt svar" data-question-index="<%= spørsmålIndex %>">
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+      
+      <div class="text-center mb-4">
+        <input type="hidden" name="tidBrukt" id="tidBrukt" value="0">
+        <div id="validation-message" class="alert alert-danger mb-3 d-none">
+          Vennligst svar på alle spørsmålene før du leverer.
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" id="submit-button">Lever svar</button>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="alert alert-info">
+      Denne quizen har ingen spørsmål ennå.
+    </div>
+  <% } %>
+  
+  <div class="mt-4">
+    <a href="/quizzes" class="btn btn-secondary">Tilbake til alle quizzer</a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Timer for quiz
+    const startTime = Date.now();
+    const tidBruktInput = document.getElementById('tidBrukt');
+    
+    if (tidBruktInput) {
+      setInterval(function() {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        tidBruktInput.value = elapsedSeconds;
+      }, 1000);
+    }
+    
+    // Improved validation system
+    const quizForm = document.getElementById('quizForm');
+    const validationMessage = document.getElementById('validation-message');
+    const submitButton = document.getElementById('submit-button');
+    const progressBar = document.getElementById('quiz-progress-bar');
+    const completionText = document.getElementById('completion-text');
+    const questionCards = document.querySelectorAll('.question-card');
+    const totalQuestions = <%= quiz.spørsmål ? quiz.spørsmål.length : 0 %>;
+    
+    // Object to track answered questions
+    const answeredQuestions = {};
+    
+    // Function to update progress
+    function updateProgress() {
+      const answeredCount = Object.keys(answeredQuestions).length;
+      const progressPercent = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+      
+      // Update progress bar
+      progressBar.style.width = progressPercent + '%';
+      progressBar.setAttribute('aria-valuenow', progressPercent);
+      progressBar.textContent = progressPercent + '%';
+      
+      // Update text
+      completionText.textContent = `${answeredCount} av ${totalQuestions} spørsmål besvart`;
+      
+      // Update button state
+      if (answeredCount === totalQuestions) {
+        submitButton.classList.remove('btn-primary');
+        submitButton.classList.add('btn-success');
+        submitButton.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Lever svar';
+      } else {
+        submitButton.classList.remove('btn-success');
+        submitButton.classList.add('btn-primary');
+        submitButton.textContent = 'Lever svar';
+      }
+    }
+    
+    // Mark a question as answered
+    function markAnswered(questionIndex) {
+      answeredQuestions[questionIndex] = true;
+      
+      // Update the question card
+      const card = document.getElementById(`question-card-${questionIndex}`);
+      const statusBadge = card.querySelector('.answer-status');
+      
+      statusBadge.textContent = 'Besvart';
+      statusBadge.classList.remove('bg-secondary');
+      statusBadge.classList.add('bg-success');
+      
+      // Remove any error message
+      card.querySelector('.question-feedback').classList.add('d-none');
+      
+      updateProgress();
+    }
+    
+    // Mark a question as unanswered
+    function markUnanswered(questionIndex) {
+      delete answeredQuestions[questionIndex];
+      
+      // Update the question card
+      const card = document.getElementById(`question-card-${questionIndex}`);
+      const statusBadge = card.querySelector('.answer-status');
+      
+      statusBadge.textContent = 'Ikke besvart';
+      statusBadge.classList.remove('bg-success');
+      statusBadge.classList.add('bg-secondary');
+      
+      updateProgress();
+    }
+    
+    // Listen for input changes
+    document.querySelectorAll('.question-input').forEach(input => {
+      input.addEventListener('change', function() {
+        const questionIndex = this.getAttribute('data-question-index');
+        
+        if ((input.type === 'radio' && input.checked) || 
+            (input.type === 'text' && input.value.trim() !== '')) {
+          markAnswered(questionIndex);
+        } else if (input.type === 'text' && input.value.trim() === '') {
+          markUnanswered(questionIndex);
+        }
+      });
+      
+      // For text inputs, we need to listen for keyup to catch erasing
+      if (input.type === 'text') {
+        input.addEventListener('keyup', function() {
+          const questionIndex = this.getAttribute('data-question-index');
+          
+          if (this.value.trim() !== '') {
+            markAnswered(questionIndex);
+          } else {
+            markUnanswered(questionIndex);
+          }
+        });
+      }
+    });
+    
+    // Form validation on submit
+    if (quizForm) {
+      quizForm.addEventListener('submit', function(e) {
+        // Debug info to console for troubleshooting
+        console.log("Form submission initiated");
+        console.log("Answered questions:", answeredQuestions);
+        
+        const answeredCount = Object.keys(answeredQuestions).length;
+        console.log(`Answered ${answeredCount} of ${totalQuestions} questions`);
+        
+        if (answeredCount < totalQuestions) {
+          e.preventDefault();
+          console.log("Preventing form submission - unanswered questions");
+          
+          const unansweredCount = totalQuestions - answeredCount;
+          validationMessage.textContent = `Du har ikke svart på ${unansweredCount} spørsmål. Vennligst svar på alle spørsmålene før du leverer.`;
+          validationMessage.classList.remove('d-none');
+          
+          // Find first unanswered question and scroll to it
+          for (let i = 0; i < totalQuestions; i++) {
+            if (!answeredQuestions[i]) {
+              const feedbackEl = document.getElementById(`question-card-${i}`).querySelector('.question-feedback');
+              feedbackEl.classList.remove('d-none');
+              
+              // Scroll to first unanswered question
+              document.getElementById(`question-card-${i}`).scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+              });
+              break;
+            }
+          }
+        } else {
+          // Create a validation element to ensure required radios work
+          document.querySelectorAll('input[type="radio"][required]').forEach(radio => {
+            const name = radio.name;
+            if (!document.querySelector(`input[name="${name}"]:checked`)) {
+              const questionIndex = radio.getAttribute('data-question-index');
+              markUnanswered(questionIndex);
+              e.preventDefault();
+              console.log(`Radio button group ${name} has no selection`);
+            }
+          });
+          
+          // Verify text inputs are filled if they are required
+          document.querySelectorAll('input[type="text"].question-input').forEach(input => {
+            if (input.required && input.value.trim() === '') {
+              const questionIndex = input.getAttribute('data-question-index');
+              markUnanswered(questionIndex);
+              e.preventDefault();
+              console.log(`Required text input for question ${questionIndex} is empty`);
+            }
+          });
+          
+          // If we still have all questions answered, log details and submit
+          if (Object.keys(answeredQuestions).length === totalQuestions) {
+            console.log('Submitting form with answers');
+            
+            // Debug: Log all form data being submitted
+            const formData = new FormData(quizForm);
+            console.log("Form data being sent:");
+            for (const [key, value] of formData.entries()) {
+              console.log(`${key}: ${value}`);
+            }
+            
+            // Add submission timestamp for tracking
+            const debugTimestamp = document.createElement('input');
+            debugTimestamp.type = 'hidden';
+            debugTimestamp.name = 'submission_timestamp';
+            debugTimestamp.value = new Date().toISOString();
+            quizForm.appendChild(debugTimestamp);
+            
+            // Continue with form submission
+            return true;
+          }
+        }
+      });
+    }
+    
+    // Initialize progress on page load
+    updateProgress();
+    
+    // Fix for radio buttons not getting selected on first click
+    document.querySelectorAll('input[type="radio"].question-input').forEach(radio => {
+      radio.addEventListener('click', function() {
+        // Force the radio to be checked
+        this.checked = true;
+        
+        // Trigger the change event
+        const event = new Event('change', { bubbles: true });
+        this.dispatchEvent(event);
+      });
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

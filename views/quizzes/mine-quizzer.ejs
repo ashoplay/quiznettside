@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <h1><%= title %></h1>
+  
+  <div class="mb-4">
+    <a href="/quizzes/create" class="btn btn-primary">Lag ny quiz</a>
+  </div>
+  
+  <% if (quizzer && quizzer.length > 0) { %>
+    <div class="row">
+      <% quizzer.forEach(quiz => { %>
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"><%= quiz.tittel %></h5>
+              <p class="card-text"><%= quiz.beskrivelse %></p>
+              <p class="card-text">
+                <small class="text-muted">Kategori: <%= quiz.kategori %></small>
+              </p>
+              <p class="card-text">
+                <small class="text-muted">Status: <%= quiz.erPublisert ? 'Publisert' : 'Upublisert' %></small>
+              </p>
+            </div>
+            <div class="card-footer bg-transparent">
+              <div class="btn-group w-100">
+                <a href="/quizzes/<%= quiz._id %>" class="btn btn-sm btn-outline-primary">Vis</a>
+                <a href="/quizzes/<%= quiz._id %>/rediger" class="btn btn-sm btn-outline-secondary">Rediger</a>
+                <a href="/quizzes/<%= quiz._id %>/statistikk" class="btn btn-sm btn-outline-info">Statistikk</a>
+                <button 
+                  class="btn btn-sm btn-outline-danger delete-quiz-btn" 
+                  data-quiz-id="<%= quiz._id %>" 
+                  data-quiz-title="<%= quiz.tittel %>">
+                  Slett
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="alert alert-info">
+      Du har ikke opprettet noen quizzer ennå.
+    </div>
+  <% } %>
+</div>
+
+<!-- Modal for delete confirmation -->
+<div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bekreft sletting</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Er du sikker på at du vil slette quizen "<span id="quiz-title-span"></span>"?</p>
+        <p>Dette kan ikke angres.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+        <form id="delete-quiz-form" method="POST">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn btn-danger">Slett</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-quiz-btn');
+    const deleteForm = document.getElementById('delete-quiz-form');
+    const quizTitleSpan = document.getElementById('quiz-title-span');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const quizId = this.getAttribute('data-quiz-id');
+        const quizTitle = this.getAttribute('data-quiz-title');
+        
+        deleteForm.action = `/quizzes/${quizId}?_method=DELETE`;
+        quizTitleSpan.textContent = quizTitle;
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteQuizModal'));
+        modal.show();
+      });
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

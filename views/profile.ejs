@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Custom CSS - make sure it's loaded after Bootstrap -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    
+    <div class="container">
+        <h1>Min Profil</h1>
+        
+        <% if(success_msg != ''){ %>
+            <div class="alert alert-success"><%= success_msg %></div>
+        <% } %>
+        
+        <% if(error_msg != ''){ %>
+            <div class="alert alert-danger"><%= error_msg %></div>
+        <% } %>
+        
+        <div class="profile-info">
+            <img src="/img/profile/<%= user.profilbilde %>" alt="Profilbilde" class="profile-image">
+            <div class="user-details">
+                <h2><%= user.brukernavn %></h2>
+                <p>E-post: <%= user.epost %></p>
+            </div>
+        </div>
+        
+        <h3>Oppdater profil</h3>
+        <form action="/profile/update" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="brukernavn">Brukernavn</label>
+                <input type="text" id="brukernavn" name="brukernavn" value="<%= user.brukernavn %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="epost">E-post</label>
+                <input type="email" id="epost" name="epost" value="<%= user.epost %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="passord">Nytt passord (la stå tomt for å beholde eksisterende)</label>
+                <input type="password" id="passord" name="passord">
+            </div>
+            
+            <div class="form-group">
+                <label for="profilbilde">Profilbilde</label>
+                <input type="file" id="profilbilde" name="profilbilde">
+            </div>
+            
+            <button type="submit" class="btn">Oppdater</button>
+        </form>
+        
+        <h3>Mine quizzer</h3>
+        <% if(mineQuizzer.length > 0) { %>
+            <div class="quiz-list">
+                <% mineQuizzer.forEach(quiz => { %>
+                    <div class="quiz-card">
+                        <h4><%= quiz.tittel %></h4>
+                        <p><%= quiz.beskrivelse %></p>
+                        <a href="/quiz/<%= quiz._id %>" class="btn">Se quiz</a>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p>Du har ikke opprettet noen quizzer ennå.</p>
+        <% } %>
+    </div>
+    
+    <%- include('partials/footer') %>
+    
+    <!-- Bootstrap JS dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

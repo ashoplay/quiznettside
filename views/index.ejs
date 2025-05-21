@@ -1,0 +1,52 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="jumbotron text-center">
+    <h1 class="display-4">Velkommen til Quiz Nettside!</h1>
+    <p class="lead">Lær IT på en morsom måte - lag og delta i quizzer om IT-relaterte temaer</p>
+    <hr class="my-4">
+    <p>Lag dine egne quizzer eller test din kunnskap med quizzer laget av andre brukere</p>
+    <% if (typeof user === 'undefined') { %>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" href="/register" role="button">Registrer deg</a>
+            <a class="btn btn-secondary btn-lg" href="/login" role="button">Logg inn</a>
+        </p>
+    <% } else { %>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" href="/quizzes" role="button">Se alle quizzer</a>
+            <a class="btn btn-success btn-lg" href="/quizzes/create" role="button">Lag din egen quiz</a>
+        </p>
+    <% } %>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-pencil-alt fa-3x mb-3 text-primary"></i>
+                <h5 class="card-title">Lag en Quiz</h5>
+                <p class="card-text">Lag dine egne quizzer med ulike spørsmålstyper og del de med andre.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-trophy fa-3x mb-3 text-warning"></i>
+                <h5 class="card-title">Test dine kunnskaper</h5>
+                <p class="card-text">Prøv ulike quizzer for å teste din kunnskap innen IT-fagene.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3 text-success"></i>
+                <h5 class="card-title">Lær sammen</h5>
+                <p class="card-text">Del kunnskap og lær av hverandre gjennom brukergenererte quizzer.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/footer') %>

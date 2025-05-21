@@ -1,0 +1,29 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+        <div class="card card-body">
+            <h1 class="text-center mb-3">Logg Inn</h1>
+            <%- include('./partials/messages') %>
+            <form action="/login" method="POST">
+                <!-- Add CSRF token -->
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="form-group">
+                    <label for="epost">E-post</label>
+                    <input type="email" id="epost" name="epost" class="form-control" placeholder="Skriv inn e-post" value="<%= typeof epost != 'undefined' ? epost : '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="passord">Passord</label>
+                    <input type="password" id="passord" name="passord" class="form-control" placeholder="Skriv inn passord">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Logg inn</button>
+            </form>
+            <p class="lead mt-4">
+                Har du ikke en konto? <a href="/register">Registrer deg</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/footer') %>

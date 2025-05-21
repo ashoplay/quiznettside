@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Alle Quizzer</h1>
+    
+    <%- include('../partials/messages') %>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form action="/quizzes" method="GET" class="form-inline">
+                <div class="input-group w-100">
+                    <input type="text" name="søk" class="form-control" placeholder="Søk etter quizzer..." value="<%= typeof søk !== 'undefined' ? søk : '' %>">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Søk</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="float-right">
+                <a href="/quizzes/create" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Lag Ny Quiz
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <% if (quizzer.length > 0) { %>
+            <% quizzer.forEach(quiz => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="badge badge-primary"><%= quiz.kategori %></span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"><%= quiz.tittel %></h5>
+                            <p class="card-text"><%= quiz.beskrivelse.substring(0, 100) %><%= quiz.beskrivelse.length > 100 ? '...' : '' %></p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-question-circle"></i> <%= quiz.spørsmål.length %> spørsmål | 
+                                    <i class="fas fa-user"></i> Laget av <%= quiz.opprettetAv.brukernavn %>
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/quizzes/<%= quiz._id %>" class="btn btn-info btn-sm">Se Detaljer</a>
+                            <a href="/quizzes/<%= quiz._id %>/ta" class="btn btn-primary btn-sm">Ta Quizzen</a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Ingen quizzer funnet. <a href="/quizzes/create">Opprett en ny quiz?</a>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

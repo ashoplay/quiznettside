@@ -1,0 +1,123 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+  <h1 class="mb-4"><%= quiz.tittel %></h1>
+  
+  <div class="card mb-4">
+    <div class="card-body">
+      <p class="lead"><%= quiz.beskrivelse %></p>
+      <div class="d-flex justify-content-between">
+        <p><small class="text-muted">Kategori: <%= quiz.kategori %></small></p>
+        <p><small class="text-muted">Opprettet av: <%= quiz.opprettetAv ? quiz.opprettetAv.brukernavn : 'Ukjent' %></small></p>
+      </div>
+    </div>
+  </div>
+
+  <% if (quiz.spørsmål && quiz.spørsmål.length > 0) { %>
+    <form action="/quizzes/<%= quiz._id %>/svar" method="POST" id="quizForm">
+      <!-- CSRF Token -->
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      
+      <% quiz.spørsmål.forEach((spørsmål, spørsmålIndex) => { %>
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>Spørsmål <%= spørsmålIndex + 1 %>: <%= spørsmål.tekst %></h5>
+          </div>
+          <div class="card-body">
+            <% if (spørsmål.type === 'flervalg') { %>
+              <% spørsmål.alternativer.forEach((alternativ, altIndex) => { %>
+                <div class="form-check mb-2">
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    name="svar[<%= spørsmålIndex %>]" 
+                    id="svar-<%= spørsmålIndex %>-<%= altIndex %>" 
+                    value="<%= alternativ._id %>">
+                  <label class="form-check-label" for="svar-<%= spørsmålIndex %>-<%= altIndex %>">
+                    <%= alternativ.tekst %>
+                  </label>
+                </div>
+              <% }); %>
+            <% } else if (spørsmål.type === 'sant_usant') { %>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="svar[<%= spørsmålIndex %>]" id="svar-<%= spørsmålIndex %>-sant" value="<%= spørsmål.alternativer[0]._id %>">
+                <label class="form-check-label" for="svar-<%= spørsmålIndex %>-sant">Sant</label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="svar[<%= spørsmålIndex %>]" id="svar-<%= spørsmålIndex %>-usant" value="<%= spørsmål.alternativer[1]._id %>">
+                <label class="form-check-label" for="svar-<%= spørsmålIndex %>-usant">Usant</label>
+              </div>
+            <% } else if (spørsmål.type === 'tekstsvar') { %>
+              <div class="form-group">
+                <input type="text" class="form-control" name="svar[<%= spørsmålIndex %>]" placeholder="Skriv inn ditt svar">
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+      
+      <div class="text-center mb-4">
+        <input type="hidden" name="tidBrukt" id="tidBrukt" value="0">
+        <button type="submit" class="btn btn-primary btn-lg">Lever svar</button>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="alert alert-info">
+      Denne quizen har ingen spørsmål ennå.
+    </div>
+  <% } %>
+  
+  <div class="mt-4">
+    <a href="/quizzes" class="btn btn-secondary">Tilbake til alle quizzer</a>
+    
+    <% if (user && quiz.opprettetAv && user._id.toString() === quiz.opprettetAv._id.toString()) { %>
+      <a href="/quizzes/<%= quiz._id %>/rediger" class="btn btn-warning">Rediger</a>
+      <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
+        Slett
+      </button>
+    <% } %>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<% if (user && quiz.opprettetAv && user._id.toString() === quiz.opprettetAv._id.toString()) { %>
+<div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bekreft sletting</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Er du sikker på at du vil slette denne quizen?</p>
+        <p>Dette kan ikke angres.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+        <form action="/quizzes/<%= quiz._id %>?_method=DELETE" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-danger">Slett</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Timer for quiz
+    const startTime = Date.now();
+    const tidBruktInput = document.getElementById('tidBrukt');
+    
+    if (tidBruktInput) {
+      setInterval(function() {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        tidBruktInput.value = elapsedSeconds;
+      }, 1000);
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>
