@@ -101,15 +101,9 @@
               </thead>
               <tbody>
                 <% if (attempts && attempts.length > 0) { %>
-                  <% attempts.slice(0, 10).forEach(attempt => { %>
+                  <% attempts.forEach((attempt) => { %>
                     <tr>
-                      <td>
-                        <% if (attempt.bruker && attempt.bruker.brukernavn) { %>
-                          <%= attempt.bruker.brukernavn %>
-                        <% } else { %>
-                          Anonymous
-                        <% } %>
-                      </td>
+                      <td><%= attempt.bruker ? attempt.bruker.brukernavn : 'Anonym' %></td>
                       <td><%= attempt.prosentRiktig %>%</td>
                       <td><%= attempt.poengOppnådd %>/<%= attempt.maksPoeng %></td>
                       <td><%= Math.floor(attempt.tidBrukt / 60) %>:<%= (attempt.tidBrukt % 60).toString().padStart(2, '0') %></td>

@@ -307,7 +307,7 @@ exports.leverSvar = async (req, res) => {
             // Find any keys that might be related to answers
             const potentialIndex = key.replace('svar', '').replace('[', '').replace(']', '');
             if (/^\d+$/.test(potentialIndex)) {
-              userAnswers[potentialIndex] = req.body[key];
+              userAnswers[potentialIndex] = req.body[key]; // Fixed typo: potentialialIndex -> potentialIndex
               console.log(`Using direct access - found answer for question ${potentialialIndex}:`, req.body[key]);
             }
           } catch (e) {

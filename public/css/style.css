@@ -1,6 +1,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
+    background-color: #121212;
+    color: #e0e0e0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -14,13 +15,17 @@ body {
 }
 
 .navbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .card {
+    background-color: #1e1e1e;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s;
+    border: 1px solid #333;
+    color: #e0e0e0;
 }
 
 .card:hover {
@@ -31,7 +36,7 @@ body {
     border-radius: 5px;
     padding: 8px 20px;
     display: inline-block;
-    background-color: #007bff;
+    background-color: #3700b3;
     color: white;
     padding: 0.75rem 1.5rem;
     border: none;
@@ -43,17 +48,21 @@ body {
 }
 
 .btn:hover {
-    background-color: #0056b3;
+    background-color: #6200ee;
+    color: white;
 }
 
 .jumbotron {
-    background-color: #e9ecef;
+    background-color: #1e1e1e;
     border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    color: #e0e0e0;
 }
 
 footer {
     margin-top: auto;
+    background-color: #1e1e1e;
+    color: #aaa;
 }
 
 /* Profile Page Styles */
@@ -62,9 +71,9 @@ footer {
   align-items: center;
   margin-bottom: 2rem;
   padding: 1rem;
-  background-color: #f9f9f9;
+  background-color: #2a2a2a;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .profile-image {
@@ -73,7 +82,7 @@ footer {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 2rem;
-  border: 3px solid #007bff;
+  border: 3px solid #3700b3;
 }
 
 .user-details {
@@ -82,7 +91,7 @@ footer {
 
 .user-details h2 {
   margin-top: 0;
-  color: #333;
+  color: #e0e0e0;
 }
 
 .form-group {
@@ -93,14 +102,17 @@ footer {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
+  color: #e0e0e0;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid #444;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: #333;
+  color: #e0e0e0;
 }
 
 .quiz-list {
@@ -111,16 +123,16 @@ footer {
 }
 
 .quiz-card {
-  border: 1px solid #ddd;
+  border: 1px solid #444;
   border-radius: 8px;
   padding: 1.5rem;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #2a2a2a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .quiz-card h4 {
   margin-top: 0;
-  color: #333;
+  color: #e0e0e0;
 }
 
 .alert {
@@ -130,13 +142,13 @@ footer {
 }
 
 .alert-success {
-  background-color: #d4edda;
-  border-color: #c3e6cb;
-  color: #155724;
+  background-color: #1e392a;
+  border-color: #2a4434;
+  color: #a8d8bf;
 }
 
 .alert-danger {
-  background-color: #f8d7da;
-  border-color: #f5c6cb;
-  color: #721c24;
+  background-color: #3d1c21;
+  border-color: #4e2428;
+  color: #e6a8b0;
 }

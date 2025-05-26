@@ -92,9 +92,9 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Timer for quiz
+    // Initialize timer variables
     const startTime = Date.now();
-    const tidBruktInput = document.getElementById('tidBrukt');
+    const tidBruktInput = document.querySelector('input[name="tidBrukt"]');
     
     if (tidBruktInput) {
       setInterval(function() {
@@ -123,174 +123,32 @@
       // Update progress bar
       progressBar.style.width = progressPercent + '%';
       progressBar.setAttribute('aria-valuenow', progressPercent);
-      progressBar.textContent = progressPercent + '%';
       
-      // Update text
-      completionText.textContent = `${answeredCount} av ${totalQuestions} spørsmål besvart`;
+      // Update completion text
+      completionText.textContent = `${answeredCount} av ${totalQuestions} besvart (${progressPercent}%)`;
       
-      // Update button state
-      if (answeredCount === totalQuestions) {
-        submitButton.classList.remove('btn-primary');
-        submitButton.classList.add('btn-success');
-        submitButton.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Lever svar';
-      } else {
-        submitButton.classList.remove('btn-success');
-        submitButton.classList.add('btn-primary');
-        submitButton.textContent = 'Lever svar';
-      }
+      // Enable/disable submit button based on progress
+      submitButton.disabled = answeredCount === 0;
     }
     
-    // Mark a question as answered
-    function markAnswered(questionIndex) {
-      answeredQuestions[questionIndex] = true;
-      
-      // Update the question card
-      const card = document.getElementById(`question-card-${questionIndex}`);
-      const statusBadge = card.querySelector('.answer-status');
-      
-      statusBadge.textContent = 'Besvart';
-      statusBadge.classList.remove('bg-secondary');
-      statusBadge.classList.add('bg-success');
-      
-      // Remove any error message
-      card.querySelector('.question-feedback').classList.add('d-none');
-      
-      updateProgress();
-    }
-    
-    // Mark a question as unanswered
-    function markUnanswered(questionIndex) {
-      delete answeredQuestions[questionIndex];
-      
-      // Update the question card
-      const card = document.getElementById(`question-card-${questionIndex}`);
-      const statusBadge = card.querySelector('.answer-status');
-      
-      statusBadge.textContent = 'Ikke besvart';
-      statusBadge.classList.remove('bg-success');
-      statusBadge.classList.add('bg-secondary');
-      
-      updateProgress();
-    }
-    
-    // Listen for input changes
-    document.querySelectorAll('.question-input').forEach(input => {
-      input.addEventListener('change', function() {
-        const questionIndex = this.getAttribute('data-question-index');
-        
-        if ((input.type === 'radio' && input.checked) || 
-            (input.type === 'text' && input.value.trim() !== '')) {
-          markAnswered(questionIndex);
-        } else if (input.type === 'text' && input.value.trim() === '') {
-          markUnanswered(questionIndex);
-        }
-      });
-      
-      // For text inputs, we need to listen for keyup to catch erasing
-      if (input.type === 'text') {
-        input.addEventListener('keyup', function() {
-          const questionIndex = this.getAttribute('data-question-index');
-          
-          if (this.value.trim() !== '') {
-            markAnswered(questionIndex);
-          } else {
-            markUnanswered(questionIndex);
-          }
-        });
-      }
-    });
-    
-    // Form validation on submit
-    if (quizForm) {
-      quizForm.addEventListener('submit', function(e) {
-        // Debug info to console for troubleshooting
-        console.log("Form submission initiated");
-        console.log("Answered questions:", answeredQuestions);
-        
-        const answeredCount = Object.keys(answeredQuestions).length;
-        console.log(`Answered ${answeredCount} of ${totalQuestions} questions`);
-        
-        if (answeredCount < totalQuestions) {
-          e.preventDefault();
-          console.log("Preventing form submission - unanswered questions");
-          
-          const unansweredCount = totalQuestions - answeredCount;
-          validationMessage.textContent = `Du har ikke svart på ${unansweredCount} spørsmål. Vennligst svar på alle spørsmålene før du leverer.`;
-          validationMessage.classList.remove('d-none');
-          
-          // Find first unanswered question and scroll to it
-          for (let i = 0; i < totalQuestions; i++) {
-            if (!answeredQuestions[i]) {
-              const feedbackEl = document.getElementById(`question-card-${i}`).querySelector('.question-feedback');
-              feedbackEl.classList.remove('d-none');
-              
-              // Scroll to first unanswered question
-              document.getElementById(`question-card-${i}`).scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-              });
-              break;
-            }
-          }
-        } else {
-          // Create a validation element to ensure required radios work
-          document.querySelectorAll('input[type="radio"][required]').forEach(radio => {
-            const name = radio.name;
-            if (!document.querySelector(`input[name="${name}"]:checked`)) {
-              const questionIndex = radio.getAttribute('data-question-index');
-              markUnanswered(questionIndex);
-              e.preventDefault();
-              console.log(`Radio button group ${name} has no selection`);
-            }
-          });
-          
-          // Verify text inputs are filled if they are required
-          document.querySelectorAll('input[type="text"].question-input').forEach(input => {
-            if (input.required && input.value.trim() === '') {
-              const questionIndex = input.getAttribute('data-question-index');
-              markUnanswered(questionIndex);
-              e.preventDefault();
-              console.log(`Required text input for question ${questionIndex} is empty`);
-            }
-          });
-          
-          // If we still have all questions answered, log details and submit
-          if (Object.keys(answeredQuestions).length === totalQuestions) {
-            console.log('Submitting form with answers');
-            
-            // Debug: Log all form data being submitted
-            const formData = new FormData(quizForm);
-            console.log("Form data being sent:");
-            for (const [key, value] of formData.entries()) {
-              console.log(`${key}: ${value}`);
-            }
-            
-            // Add submission timestamp for tracking
-            const debugTimestamp = document.createElement('input');
-            debugTimestamp.type = 'hidden';
-            debugTimestamp.name = 'submission_timestamp';
-            debugTimestamp.value = new Date().toISOString();
-            quizForm.appendChild(debugTimestamp);
-            
-            // Continue with form submission
-            return true;
-          }
-        }
-      });
-    }
-    
-    // Initialize progress on page load
+    // Initialize progress
     updateProgress();
     
-    // Fix for radio buttons not getting selected on first click
-    document.querySelectorAll('input[type="radio"].question-input').forEach(radio => {
-      radio.addEventListener('click', function() {
-        // Force the radio to be checked
-        this.checked = true;
-        
-        // Trigger the change event
-        const event = new Event('change', { bubbles: true });
-        this.dispatchEvent(event);
+    // Event listener for radio/checkbox inputs
+    document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+      input.addEventListener('change', function() {
+        const questionId = this.getAttribute('name').split('[')[1].split(']')[0];
+        answeredQuestions[questionId] = true;
+        updateProgress();
+      });
+    });
+    
+    // Event listener for text inputs
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+      input.addEventListener('input', function() {
+        const questionId = this.getAttribute('name').split('[')[1].split(']')[0];
+        answeredQuestions[questionId] = !!this.value.trim();
+        updateProgress();
       });
     });
   });
