@@ -1,45 +1,45 @@
 <%- include('../partials/header') %>
 
 <div class="container mt-4">
-  <h1>Edit Quiz</h1>
+  <h1 class="text-primary mb-4">Edit Quiz</h1>
   
-  <form action="/quizzer/<%= quiz._id %>?_method=PUT" method="POST">
+  <form action="/quizzer/<%= quiz._id %>?_method=PUT" method="POST" class="bg-light p-4 rounded shadow-sm">
     <!-- Include CSRF token to prevent CSRF errors -->
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     
     <div class="mb-3">
-      <label for="title" class="form-label">Quiz Title</label>
-      <input type="text" class="form-control" id="title" name="title" value="<%= quiz.title %>" required>
+      <label for="title" class="form-label fw-bold">Quiz Title</label>
+      <input type="text" class="form-control border-primary" id="title" name="title" value="<%= quiz.tittel %>" required>
     </div>
     
     <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
-      <textarea class="form-control" id="description" name="description" rows="3"><%= quiz.description %></textarea>
+      <label for="description" class="form-label fw-bold">Description</label>
+      <textarea class="form-control border-primary" id="description" name="description" rows="3"><%= quiz.beskrivelse %></textarea>
     </div>
     
-    <h3 class="mt-4">Questions</h3>
+    <h3 class="mt-4 text-primary">Questions</h3>
     <div id="questions-container">
-      <% if (quiz.questions && Array.isArray(quiz.questions)) { %>
-        <% quiz.questions.forEach((question, qIndex) => { %>
-          <div class="card mb-3 question-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5>Question <%= qIndex + 1 %></h5>
+      <% if (quiz.spørsmål && Array.isArray(quiz.spørsmål)) { %>
+        <% quiz.spørsmål.forEach((question, qIndex) => { %>
+          <div class="card mb-3 question-card border-secondary">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Question <%= qIndex + 1 %></h5>
               <button type="button" class="btn btn-danger btn-sm remove-question">Remove</button>
             </div>
             <div class="card-body">
               <div class="mb-3">
-                <label class="form-label">Question Text</label>
-                <input type="text" class="form-control" name="questions[<%= qIndex %>][text]" value="<%= question.text %>" required>
+                <label class="form-label fw-bold">Question Text</label>
+                <input type="text" class="form-control" name="questions[<%= qIndex %>][text]" value="<%= question.tekst %>" required>
               </div>
               
               <div class="mb-3">
-                <label class="form-label">Correct Option (0-based index)</label>
-                <input type="number" class="form-control" name="questions[<%= qIndex %>][correctOption]" value="<%= question.correctOption %>" min="0" required>
+                <label class="form-label fw-bold">Correct Option (0-based index)</label>
+                <input type="number" class="form-control" name="questions[<%= qIndex %>][correctOption]" value="<%= question.correctOption || 0 %>" min="0" required>
               </div>
               
               <div class="options-container">
-                <label class="form-label">Options</label>
-                <% question.options.forEach((option, oIndex) => { %>
+                <label class="form-label fw-bold">Options</label>
+                <% (question.options || question.alternativer || []).forEach((option, oIndex) => { %>
                   <div class="input-group mb-2">
                     <input type="text" class="form-control" name="questions[<%= qIndex %>][options][<%= oIndex %>]" value="<%= option %>" required>
                     <button type="button" class="btn btn-outline-danger remove-option">✕</button>
@@ -53,11 +53,11 @@
       <% } %>
     </div>
     
-    <button type="button" id="add-question" class="btn btn-outline-success mb-4">+ Add Question</button>
+    <button type="button" id="add-question" class="btn btn-success mb-4">+ Add Question</button>
     
     <div class="mb-3">
-      <button type="submit" class="btn btn-primary">Save Changes</button>
-      <a href="/quizzer/<%= quiz._id %>" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+      <a href="/quizzer/<%= quiz._id %>" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
     </div>
   </form>
 </div>

@@ -1,0 +1,155 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Systeminnstillinger</h1>
+        <a href="/admin" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left mr-1"></i> Tilbake til dashboard
+        </a>
+    </div>
+    
+    <%- include('../partials/messages') %>
+    
+    <div class="row">
+        <!-- System Settings -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="fas fa-cogs mr-2"></i> Generelle innstillinger</h3>
+                </div>
+                <div class="card-body">
+                    <form action="/admin/system/oppdater" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        
+                        <div class="form-group mb-3">
+                            <label for="siteName">Nettsidenavnet</label>
+                            <input type="text" class="form-control" id="siteName" name="siteName" value="<%= settings.siteName || 'Quiz Nettside' %>">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="contactEmail">Kontakt e-post</label>
+                            <input type="email" class="form-control" id="contactEmail" name="contactEmail" value="<%= settings.contactEmail || '' %>">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="maxQuizzesPerUser">Maks antall quizzer per bruker</label>
+                            <input type="number" class="form-control" id="maxQuizzesPerUser" name="maxQuizzesPerUser" value="<%= settings.maxQuizzesPerUser || 50 %>">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="maxQuestionsPerQuiz">Maks antall spørsmål per quiz</label>
+                            <input type="number" class="form-control" id="maxQuestionsPerQuiz" name="maxQuestionsPerQuiz" value="<%= settings.maxQuestionsPerQuiz || 100 %>">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="enableRegistrations" name="enableRegistrations" <%= settings.enableRegistrations !== false ? 'checked' : '' %>>
+                                <label class="form-check-label" for="enableRegistrations">Tillat nye registreringer</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="maintenanceMode" name="maintenanceMode" <%= settings.maintenanceMode === true ? 'checked' : '' %>>
+                                <label class="form-check-label" for="maintenanceMode">Vedlikeholdsmodus</label>
+                                <small class="form-text text-muted">Kun administratorer vil ha tilgang når dette er aktivert.</small>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Lagre innstillinger</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Backup & Restore -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3><i class="fas fa-database mr-2"></i> Sikkerhetskopi og gjenoppretting</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Siste sikkerhetskopi:</strong> <%= settings.lastBackup ? new Date(settings.lastBackup).toLocaleString('no-NO') : 'Aldri' %></p>
+                    
+                    <form action="/admin/backup" method="POST" class="mb-4">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="includeUsers" name="includeUsers" checked>
+                                <label class="form-check-label" for="includeUsers">Inkluder brukere</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="includeQuizzes" name="includeQuizzes" checked>
+                                <label class="form-check-label" for="includeQuizzes">Inkluder quizzer</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="includeAttempts" name="includeAttempts" checked>
+                                <label class="form-check-label" for="includeAttempts">Inkluder quizforsøk</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="includeSettings" name="includeSettings" checked>
+                                <label class="form-check-label" for="includeSettings">Inkluder systeminnstillinger</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-download mr-1"></i> Ta sikkerhetskopi nå
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <h4>Gjenopprett fra sikkerhetskopi</h4>
+                    <form action="/admin/restore" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <div class="form-group mb-3">
+                            <label for="backupFile">Last opp sikkerhetskopifil</label>
+                            <input type="file" class="form-control" id="backupFile" name="backupFile" accept=".json,.zip">
+                            <small class="form-text text-muted">Kun .json eller .zip filer er tillatt.</small>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> 
+                            <strong>Advarsel:</strong> Gjenoppretting fra sikkerhetskopi vil overskrive eksisterende data. Dette kan ikke angres.
+                        </div>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-upload mr-1"></i> Gjenopprett fra sikkerhetskopi
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- System Info -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3><i class="fas fa-info-circle mr-2"></i> Systeminformasjon</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Node.js versjon:</span>
+                            <strong><%= systemInfo.nodeVersion %></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>MongoDB versjon:</span>
+                            <strong><%= systemInfo.mongoVersion %></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Databasestørrelse:</span>
+                            <strong><%= systemInfo.dbSize %></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Driftsmiljø:</span>
+                            <strong><%= process.env.NODE_ENV || 'development' %></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Serverens opptid:</span>
+                            <strong><%= systemInfo.uptime %></strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

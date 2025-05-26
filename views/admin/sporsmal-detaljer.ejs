@@ -1,0 +1,134 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Spørsmålsdetaljer</h1>
+    <a href="/admin/sporsmal" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1"></i> Tilbake til spørsmålsliste
+    </a>
+  </div>
+
+  <%- include('../partials/messages') %>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+      <h3 class="mb-0"><i class="fas fa-question-circle mr-2"></i> Spørsmålsinfo</h3>
+      <div>
+        <a href="/admin/sporsmal/<%= sporsmal._id %>/rediger" class="btn btn-light btn-sm">
+          <i class="fas fa-edit"></i> Rediger
+        </a>
+        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal">
+          <i class="fas fa-trash-alt"></i> Slett
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <h4 class="border-bottom pb-2 mb-3"><%= sporsmal.tekst %></h4>
+          
+          <table class="table table-bordered">
+            <tr>
+              <th style="width: 150px;">Type:</th>
+              <td>
+                <% if (sporsmal.type === 'flervalg') { %>
+                  <span class="badge bg-primary">Flervalg</span>
+                <% } else if (sporsmal.type === 'sant_usant') { %>
+                  <span class="badge bg-success">Sant/Usant</span>
+                <% } else if (sporsmal.type === 'tekstsvar') { %>
+                  <span class="badge bg-warning">Tekstsvar</span>
+                <% } %>
+              </td>
+            </tr>
+            <tr>
+              <th>Poeng:</th>
+              <td><%= sporsmal.poeng || 1 %></td>
+            </tr>
+            <tr>
+              <th>Quiz:</th>
+              <td><a href="/quizzes/<%= quiz._id %>"><%= quiz.tittel %></a></td>
+            </tr>
+            <tr>
+              <th>Opprettet av:</th>
+              <td><%= quiz.opprettetAv ? quiz.opprettetAv.brukernavn : 'Ukjent' %></td>
+            </tr>
+          </table>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">Riktig svar</h5>
+            </div>
+            <div class="card-body">
+              <% if (sporsmal.type === 'flervalg') { %>
+                <ul class="list-group">
+                  <% sporsmal.alternativer.forEach(alt => { %>
+                    <li class="list-group-item <%= alt.erRiktig ? 'list-group-item-success' : '' %>">
+                      <%= alt.tekst %>
+                      <% if (alt.erRiktig) { %>
+                        <i class="fas fa-check-circle float-end text-success"></i>
+                      <% } %>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } else if (sporsmal.type === 'sant_usant') { %>
+                <div class="alert alert-success">
+                  <% if (sporsmal.alternativer && sporsmal.alternativer[0] && sporsmal.alternativer[0].erRiktig) { %>
+                    <i class="fas fa-check-circle"></i> Sant
+                  <% } else { %>
+                    <i class="fas fa-times-circle"></i> Usant
+                  <% } %>
+                </div>
+              <% } else if (sporsmal.type === 'tekstsvar') { %>
+                <div class="alert alert-success">
+                  <%= sporsmal.riktigSvar || 'Ikke angitt' %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h3 class="mb-0"><i class="fas fa-chart-bar mr-2"></i> Statistikk</h3>
+    </div>
+    <div class="card-body">
+      <p class="lead">Statistikk for dette spørsmålet vil vises her når det blir tilgjengelig.</p>
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Detaljert statistikk vil bli implementert i en fremtidig oppdatering.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for deleting question -->
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bekreft sletting</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Er du sikker på at du vil slette dette spørsmålet?</p>
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Dette kan ikke angres.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+        <form action="/admin/sporsmal/<%= sporsmal._id %>?_method=DELETE" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-danger">Slett spørsmål</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

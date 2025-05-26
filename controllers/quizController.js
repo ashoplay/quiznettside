@@ -495,8 +495,41 @@ exports.visStatistikk = async (req, res) => {
     
     // Beregn statistikk
     const antallForsøk = attempts.length;
-    const gjennomsnittScore = antallForsøk > 0 
-      ? attempts.reduce((sum, att) => sum + att.prosentRiktig, 0) / antallForsøk 
+    const antallUnikeBrukere = new Set(attempts.map(a => a.bruker?._id?.toString())).size;
+    
+    // Calculate average score and time
+    let gjennomsnittScore = 0;
+    let gjennomsnittTid = 0;
+    
+    if (antallForsøk > 0) {
+      gjennomsnittScore = attempts.reduce((sum, att) => sum + att.prosentRiktig, 0) / antallForsøk;
+      gjennomsnittTid = attempts.reduce((sum, att) => sum + (att.tidBrukt || 0), 0) / antallForsøk;
+    }
+    
+    // Create leaderboard - best score per user
+    const userBestScores = new Map();
+    attempts.forEach(attempt => {
+      const userId = attempt.bruker?._id?.toString();
+      if (userId) {
+        const currentBest = userBestScores.get(userId) || { score: 0, attempt: null };
+        if (attempt.prosentRiktig > currentBest.score) {
+          userBestScores.set(userId, { 
+            score: attempt.prosentRiktig, 
+            attempt: attempt 
+          });
+        }
+      }
+    });
+    
+    // Convert to array and sort
+    const leaderboard = Array.from(userBestScores.values())
+      .map(entry => entry.attempt)
+      .sort((a, b) => b.prosentRiktig - a.prosentRiktig)
+      .slice(0, 10); // Top 10
+    
+    // Get best score overall
+    const bestScore = attempts.length > 0 
+      ? attempts.reduce((max, att) => Math.max(max, att.prosentRiktig), 0)
       : 0;
     
     res.render('quizzes/statistikk', {
@@ -505,7 +538,11 @@ exports.visStatistikk = async (req, res) => {
       attempts,
       statistikk: {
         antallForsøk,
-        gjennomsnittScore: Math.round(gjennomsnittScore)
+        antallUnikeBrukere,
+        gjennomsnittScore: Math.round(gjennomsnittScore),
+        gjennomsnittTid: Math.round(gjennomsnittTid),
+        bestScore,
+        leaderboard
       }
     });
   } catch (error) {

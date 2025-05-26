@@ -19,7 +19,22 @@ router.delete('/brukere/:id', adminController.slettBruker);
 router.get('/quizzer', adminController.alleQuizzer);
 router.delete('/quizzer/:id', adminController.slettQuiz);
 
+// Spørsmålsadministrasjon
+router.get('/sporsmal', adminController.alleSporsmal);
+router.get('/sporsmal/:id', adminController.visSporsmal);
+router.get('/sporsmal/:id/rediger', adminController.visRedigerSporsmal);
+router.put('/sporsmal/:id', adminController.oppdaterSporsmal);
+router.delete('/sporsmal/:id', adminController.slettSporsmal);
+
+// Systeminnstillinger
+router.get('/system', adminController.systemInnstillinger);
+router.post('/system', adminController.oppdaterSystemInnstillinger);
+router.post('/system/backup', adminController.taSikkerhetskopi);
+router.post('/system/restore', adminController.gjenopprettFraSikkerhetskopi);
+
 // Aktivitetslogg
 router.get('/aktivitetslogg', adminController.aktivitetslogg);
+router.post('/aktivitetslogg/eksport', adminController.eksporterAktivitetslogg);
+router.delete('/aktivitetslogg/slett', adminController.slettGamleAktiviteter);
 
 module.exports = router;

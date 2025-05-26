@@ -1,0 +1,176 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Rediger Spørsmål</h1>
+    <a href="/admin/sporsmal" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1"></i> Tilbake til spørsmålsliste
+    </a>
+  </div>
+
+  <%- include('../partials/messages') %>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">
+        <i class="fas fa-edit mr-2"></i> Spørsmål fra quiz: <%= quiz.tittel %>
+      </h3>
+    </div>
+    <div class="card-body">
+      <form action="/admin/sporsmal/<%= sporsmal._id %>?_method=PUT" method="POST">
+        <!-- CSRF Token -->
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="mb-3">
+          <label for="tekst" class="form-label fw-bold">Spørsmålstekst</label>
+          <input type="text" class="form-control" id="tekst" name="tekst" value="<%= sporsmal.tekst %>" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="type" class="form-label fw-bold">Spørsmålstype</label>
+          <select class="form-select" id="type" name="type" required>
+            <option value="flervalg" <%= sporsmal.type === 'flervalg' ? 'selected' : '' %>>Flervalg</option>
+            <option value="sant_usant" <%= sporsmal.type === 'sant_usant' ? 'selected' : '' %>>Sant/Usant</option>
+            <option value="tekstsvar" <%= sporsmal.type === 'tekstsvar' ? 'selected' : '' %>>Tekstsvar</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="poeng" class="form-label fw-bold">Poeng</label>
+          <input type="number" class="form-control" id="poeng" name="poeng" value="<%= sporsmal.poeng || 1 %>" min="1" required>
+        </div>
+
+        <!-- Flervalg alternativer -->
+        <div id="flervalgOptions" class="mb-3 <%= sporsmal.type !== 'flervalg' ? 'd-none' : '' %>">
+          <label class="form-label fw-bold">Alternativer</label>
+          <div id="alternativer-container">
+            <% if (sporsmal.type === 'flervalg' && sporsmal.alternativer) { %>
+              <% sporsmal.alternativer.forEach((alternativ, idx) => { %>
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" name="alternativer[]" value="<%= alternativ.tekst %>" required>
+                  <div class="input-group-append">
+                    <div class="input-group-text">
+                      <input type="radio" name="riktigAlternativ" value="<%= idx %>" <%= alternativ.erRiktig ? 'checked' : '' %>>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+                </div>
+              <% }); %>
+            <% } %>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="add-alternativ">+ Legg til alternativ</button>
+        </div>
+
+        <!-- Sant/Usant -->
+        <div id="santUsantOptions" class="mb-3 <%= sporsmal.type !== 'sant_usant' ? 'd-none' : '' %>">
+          <label class="form-label fw-bold">Riktig svar</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="riktigAlternativ" id="riktigSant" value="sant" 
+              <%= sporsmal.type === 'sant_usant' && sporsmal.alternativer && sporsmal.alternativer[0] && sporsmal.alternativer[0].erRiktig ? 'checked' : '' %>>
+            <label class="form-check-label" for="riktigSant">Sant</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="riktigAlternativ" id="riktigUsant" value="usant" 
+              <%= sporsmal.type === 'sant_usant' && sporsmal.alternativer && sporsmal.alternativer[1] && sporsmal.alternativer[1].erRiktig ? 'checked' : '' %>>
+            <label class="form-check-label" for="riktigUsant">Usant</label>
+          </div>
+        </div>
+
+        <!-- Tekstsvar -->
+        <div id="tekstsvarOptions" class="mb-3 <%= sporsmal.type !== 'tekstsvar' ? 'd-none' : '' %>">
+          <label for="riktigSvar" class="form-label fw-bold">Riktig svar</label>
+          <input type="text" class="form-control" id="riktigSvar" name="riktigSvar" 
+            value="<%= sporsmal.type === 'tekstsvar' ? (sporsmal.riktigSvar || '') : '' %>">
+          <small class="form-text text-muted">Svar er ikke case-sensitive.</small>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save mr-2"></i> Lagre endringer
+          </button>
+          <a href="/admin/sporsmal" class="btn btn-outline-secondary">Avbryt</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Type selection changes
+    const typeSelect = document.getElementById('type');
+    const flervalgOptions = document.getElementById('flervalgOptions');
+    const santUsantOptions = document.getElementById('santUsantOptions');
+    const tekstsvarOptions = document.getElementById('tekstsvarOptions');
+    
+    typeSelect.addEventListener('change', function() {
+      // Hide all options first
+      flervalgOptions.classList.add('d-none');
+      santUsantOptions.classList.add('d-none');
+      tekstsvarOptions.classList.add('d-none');
+      
+      // Show relevant options based on type
+      if (this.value === 'flervalg') {
+        flervalgOptions.classList.remove('d-none');
+      } else if (this.value === 'sant_usant') {
+        santUsantOptions.classList.remove('d-none');
+      } else if (this.value === 'tekstsvar') {
+        tekstsvarOptions.classList.remove('d-none');
+      }
+    });
+    
+    // Add new alternative for multiple choice
+    const addAlternativBtn = document.getElementById('add-alternativ');
+    const alternativerContainer = document.getElementById('alternativer-container');
+    
+    addAlternativBtn.addEventListener('click', function() {
+      const newAlternativ = document.createElement('div');
+      newAlternativ.className = 'input-group mb-2';
+      newAlternativ.innerHTML = `
+        <input type="text" class="form-control" name="alternativer[]" required>
+        <div class="input-group-append">
+          <div class="input-group-text">
+            <input type="radio" name="riktigAlternativ" value="${alternativerContainer.children.length}">
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline-danger remove-option">✕</button>
+      `;
+      
+      alternativerContainer.appendChild(newAlternativ);
+      
+      // Add event listener to new remove button
+      const removeBtn = newAlternativ.querySelector('.remove-option');
+      removeBtn.addEventListener('click', removeAlternativ);
+    });
+    
+    // Remove alternative
+    function removeAlternativ() {
+      const alternativElement = this.closest('.input-group');
+      if (alternativerContainer.children.length > 2) {
+        alternativElement.remove();
+        // Update radio values
+        updateRadioValues();
+      } else {
+        alert('Du må ha minst to alternativer for flervalgsspørsmål.');
+      }
+    }
+    
+    // Update radio values when alternatives change
+    function updateRadioValues() {
+      const alternativElements = alternativerContainer.querySelectorAll('.input-group');
+      alternativElements.forEach((element, index) => {
+        const radioBtn = element.querySelector('input[type="radio"]');
+        radioBtn.value = index;
+      });
+    }
+    
+    // Add event listeners to existing remove buttons
+    const removeButtons = document.querySelectorAll('.remove-option');
+    removeButtons.forEach(button => {
+      button.addEventListener('click', removeAlternativ);
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>
